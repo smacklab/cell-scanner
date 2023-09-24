@@ -4,7 +4,7 @@ from ultralytics import YOLO
 from PIL import Image
 import tifffile
 import torch
-from WhiteBloodCellDetector import WhiteBloodCellDetector
+from Detectors import WhiteBloodCellDetector, RedBloodCellDetector
 
 # SETUP GPU
 device = "0" if torch.cuda.is_available() else "cpu"
@@ -25,10 +25,13 @@ if device == "0":
 
 
 if __name__ == '__main__':
-    wbcDetector = WhiteBloodCellDetector("models/wbc-model-Feb24.pt", "models/wbc-classification-box-Sep23.pt")
-    image = Image.open("samples/sample4.jpg")
-    wbcs = wbcDetector.detect(image)
+    wbcDetector = WhiteBloodCellDetector("models/wbc-detection-Feb24.pt", "models/wbc-classification-Sep23.pt")
+    rbcDetector = RedBloodCellDetector("models/rbc-detection-Sep12.pt")
+    cropped_image = Image.open("samples/sample4.jpg")
+    wbcs = wbcDetector.detect(cropped_image)
+    rbc = rbcDetector.detect(cropped_image)
     print(wbcs)
+    print(rbc)
     # for ndpi in folder:
     #     process__ndpi(ndpi)
 
