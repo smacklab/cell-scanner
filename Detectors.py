@@ -1,8 +1,15 @@
 from IPython.display import display
-from collections import defaultdict
+from collections import Counter
 from ultralytics import YOLO
 from PIL import Image
 import sys
+from dataclasses import dataclass
+
+
+@dataclass
+class ScanResult:
+    wbc: Counter
+    rbc: int
 
 
 class Singleton(type):
@@ -29,8 +36,8 @@ class WhiteBloodCellDetector(metaclass=Singleton):
     def is_gpu(self) -> bool:
         return self.device != "cpu"
 
-    def detect(self, image: Image) -> defaultdict:
-        wbcs = defaultdict(int)
+    def detect(self, image: Image) -> Counter:
+        wbcs = Counter()
 
         r = self.dmodel(image, device=self.device, verbose=False)[0]  # results always a list of length 1
 
@@ -51,7 +58,7 @@ class WhiteBloodCellDetector(metaclass=Singleton):
                 wbc_classname = self.classify(image, xywh)
                 wbcs[wbc_classname] += 1
 
-        return dict(wbcs)
+        return wbcs
 
     def classify(self, image: Image, xywh) -> str:
         center_x, center_y, _, _ = xywh
@@ -74,6 +81,9 @@ class WhiteBloodCellDetector(metaclass=Singleton):
         if self.is_gpu():
             r.boxes = r.boxes.cpu()
         r.boxes = r.boxes.numpy()
+
+        if len(r.boxes) == 0:
+            return "Unknown"
 
         cords = [(x, y, w, h, cls) for (x, y, w, h), cls in zip(r.boxes.xywh, r.boxes.cls)]
         closest = self.get_wbc_closest_to_center(cords)
