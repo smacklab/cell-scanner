@@ -1,6 +1,8 @@
+from IPython.display import display
 from collections import defaultdict
 from ultralytics import YOLO
 from PIL import Image
+import sys
 
 
 class Singleton(type):
@@ -35,7 +37,10 @@ class WhiteBloodCellDetector(metaclass=Singleton):
         if self.DEBUG:
             im_array = r.plot()  # plot wbcs
             im = Image.fromarray(im_array[..., ::-1])
-            im.show()  # show image
+            if 'ipykernel' in sys.modules:
+                display(im)  # show image
+            else:
+                im.show()
 
         if self.is_gpu():
             r.boxes = r.boxes.cpu()
@@ -44,7 +49,6 @@ class WhiteBloodCellDetector(metaclass=Singleton):
             _, _, width, height = xywh
             if conf > self.CONFIDENCE_THRESHOLD and (self.IMAGE_SIZE_RATIO_THRESHOLD < width / height < 1 / self.IMAGE_SIZE_RATIO_THRESHOLD):
                 wbc_classname = self.classify(image, xywh)
-                print(wbc_classname)
                 wbcs[wbc_classname] += 1
 
         return dict(wbcs)
@@ -58,6 +62,15 @@ class WhiteBloodCellDetector(metaclass=Singleton):
         cls_image = image.crop((left, top, right, bottom))
 
         r = self.cmodel(cls_image, device=self.device, verbose=False)[0]
+
+        if self.DEBUG:
+            im_array = r.plot(font_size=0.01, line_width=1)  # plot rbcs
+            im = Image.fromarray(im_array[..., ::-1])
+            if 'ipykernel' in sys.modules:
+                display(im)  # show image
+            else:
+                im.show()  # show image
+
         if self.is_gpu():
             r.boxes = r.boxes.cpu()
         r.boxes = r.boxes.numpy()
@@ -80,7 +93,7 @@ class WhiteBloodCellDetector(metaclass=Singleton):
 class RedBloodCellDetector(metaclass=Singleton):
     def __init__(self, detect_model_path, device="cpu", DEBUG=False):
         self.model = YOLO(detect_model_path)
-        self.CONFIDENCE_THRESHOLD = 0.25
+        self.CONFIDENCE_THRESHOLD = 0.4
         self.IMAGE_SIZE_RATIO_THRESHOLD = 0.7
         self.device = device
         self.DEBUG = DEBUG
@@ -94,9 +107,12 @@ class RedBloodCellDetector(metaclass=Singleton):
         r = self.model(image, device=self.device, verbose=False)[0]  # results always a list of length 1
 
         if self.DEBUG:
-            im_array = r.plot(labels=False)  # plot rbcs
+            im_array = r.plot(font_size=0.01, line_width=1)  # plot rbcs
             im = Image.fromarray(im_array[..., ::-1])
-            im.show()  # show image
+            if 'ipykernel' in sys.modules:
+                display(im)  # show image
+            else:
+                im.show()  # show image
 
         if self.is_gpu():
             r.boxes = r.boxes.cpu()
@@ -125,7 +141,10 @@ class BloodDensityDetector(metaclass=Singleton):
         if self.DEBUG:
             im_array = r.plot(labels=False)  # plot density
             im = Image.fromarray(im_array[..., ::-1])
-            im.show()  # show image
+            if 'ipykernel' in sys.modules:
+                display(im)  # show image
+            else:
+                im.show()
 
         if self.is_gpu():
             r.boxes = r.boxes.cpu()
