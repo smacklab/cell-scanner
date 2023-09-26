@@ -3,13 +3,14 @@ from collections import Counter
 from ultralytics import YOLO
 from PIL import Image
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 
 @dataclass
 class ScanResult:
-    wbc: Counter
-    rbc: int
+    wbc: Counter = field(default_factory=Counter)
+    rbc: int = 0
+
 
 
 class Singleton(type):
@@ -137,16 +138,12 @@ class RedBloodCellDetector(metaclass=Singleton):
 
 
 class BloodDensityDetector(metaclass=Singleton):
-    def __init__(self, density_model_path, device="cpu", DEBUG=False):
+    def __init__(self, density_model_path, DEBUG=False):
         self.model = YOLO(density_model_path)
-        self.device = device
         self.DEBUG = DEBUG
 
-    def is_gpu(self) -> bool:
-        return self.device != "cpu"
-
     def hasGoodDensity(self, image: Image) -> int:
-        r = self.model(image, device=self.device, verbose=False)[0]  # results always a list of length 1
+        r = self.model(image, verbose=False)[0]  # results always a list of length 1
 
         if self.DEBUG:
             im_array = r.plot(labels=False)  # plot density
@@ -156,8 +153,6 @@ class BloodDensityDetector(metaclass=Singleton):
             else:
                 im.show()
 
-        if self.is_gpu():
-            r.boxes = r.boxes.cpu()
         cls_idx = r.probs.top1
         cls_name = r.names[cls_idx]
 
