@@ -1,2 +1,7 @@
 1. NDPI reading is slow due to `tif.asarray()`. Check out this thread https://stackoverflow.com/questions/7569553/working-with-tiffs-import-export-in-python-using-numpy
 2. Need to save "Unknown" wbcs to folder
+
+# of Neutrophils	# of Lymphocytes	# of Monocytes	# of Eosinophils	# of Basophils	Total WBCs
+6228	            1518	            562	            195	                41              8544
+
+ScanResult(wbc=Counter({'N': 5112, 'Unknown': 1817, 'L': 1564, 'E': 682, 'M': 403, 'B': 12}), rbc=1262534)

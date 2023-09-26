@@ -37,7 +37,7 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
         # print summary to file
         with open(os.path.splitext(ndpiFile)[0] + ".txt", "w") as f:
             f.write(str(summary))
-            
+
     return summary
 
 
@@ -57,9 +57,21 @@ def process_image(image: Image) -> ScanResult:
 
 
 if __name__ == '__main__':
+    summary = ScanResult()
 
-    ndpi_file = "samples/[F012]2019-107_MID.ndpi"
-    summary = process_ndpi(ndpi_file, save=True)
+    # open file samples/Set5/active.txt
+    # the file contains image names of the active samples
+    # each line is a image name
+    # for each filename, run the process_image function
+    summaryLog = tqdm(total=0, position=0, bar_format='{desc}')
+    for filename in tqdm(open("samples/Set5/active.txt").readlines()):
+        filename = filename.strip()
+        image = Image.open("samples/Set5/" + filename)
+        result = process_image(image)
+        summary.wbc += result.wbc
+        summary.rbc += result.rbc
+        summaryLog.set_description_str(f'{summary}')
+
 
     print(summary)
-    # process_image(Image.open("samples/sample1.jpg"))
+
