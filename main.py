@@ -13,7 +13,6 @@ if device == "0":
     torch.cuda.set_device(0)
 ###
 
-
 def process_ndpi(ndpiFile: str) -> ScanResult:
     if not os.path.isfile(ndpiFile) or not ndpiFile.endswith(".ndpi"):
         print("Invalid NDPI file")
@@ -27,10 +26,11 @@ def process_ndpi(ndpiFile: str) -> ScanResult:
         print("Done reading, start processing NDPI Scan")
         ndpi = Image.fromarray(ndpiRaw)
         ndpiWidth, ndpiHeight = ndpi.size
-        summaryLog = tqdm(total=0, position=2, bar_format='{desc}')
+        print("Processing row by row, column by column (approx. 5 minutes on GPU)")
 
-        for height in tqdm(range(0, ndpiHeight, 512), position=0, leave=False, desc="Rows"):
-            for width in tqdm(range(0, ndpiWidth, 512), position=1, leave=False, desc="Columns"):
+        summaryLog = tqdm(total=0, position=2, bar_format='{desc}')
+        for height in tqdm(range(0, ndpiHeight, 512), position=0):
+            for width in tqdm(range(0, ndpiWidth, 512), leave=False, position=1):
                 croppedImage = ndpi.crop((height, width, height + 512, width + 512))
                 result = process_image(croppedImage)
                 # combine results
