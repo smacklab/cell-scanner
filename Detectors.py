@@ -4,7 +4,7 @@ from ultralytics import YOLO
 from PIL import Image
 import sys
 from dataclasses import dataclass, field
-
+import torch
 
 @dataclass
 class ScanResult:
@@ -24,23 +24,23 @@ class Singleton(type):
 
 
 class WhiteBloodCellDetector(metaclass=Singleton):
-    def __init__(self, detect_model_path, classify_model_path, device="cpu", DEBUG=False):
+    def __init__(self, detect_model_path, classify_model_path, DEBUG=False):
         self.CONFIDENCE_THRESHOLD = 0.25
         self.CLASSIFY_SIZE = 224
         self.DETECTION_SIZE = 512
         self.IMAGE_SIZE_RATIO_THRESHOLD = 0.5
         self.DEBUG = DEBUG
-        self.device = device
+        self.DEVICE = "0" if torch.cuda.is_available() else "cpu"
         self.dmodel = YOLO(detect_model_path)
         self.cmodel = YOLO(classify_model_path)
 
     def is_gpu(self) -> bool:
-        return self.device != "cpu"
+        return self.DEVICE != "cpu"
 
     def detect(self, image: Image) -> Counter:
         wbcs = Counter()
 
-        r = self.dmodel(image, device=self.device, verbose=False)[0]  # results always a list of length 1
+        r = self.dmodel(image, device=self.DEVICE, verbose=False)[0]  # results always a list of length 1
 
         if self.DEBUG:
             im_array = r.plot()  # plot wbcs
@@ -69,13 +69,13 @@ class WhiteBloodCellDetector(metaclass=Singleton):
         bottom = min(center_y + self.CLASSIFY_SIZE // 2, self.DETECTION_SIZE)
         cls_image = image.crop((left, top, right, bottom))
 
-        r = self.cmodel(cls_image, device=self.device, verbose=False)[0]
+        r = self.cmodel(cls_image, device=self.DEVICE, verbose=False)[0]
 
         if self.DEBUG:
             im_array = r.plot(font_size=0.01, line_width=1)  # plot rbcs
             im = Image.fromarray(im_array[..., ::-1])
             if 'ipykernel' in sys.modules:
-                display(im)  # show image
+                display(im)  # show image in Jupyter Notebook
             else:
                 im.show()  # show image
 
@@ -102,26 +102,27 @@ class WhiteBloodCellDetector(metaclass=Singleton):
 
 
 class RedBloodCellDetector(metaclass=Singleton):
-    def __init__(self, detect_model_path, device="cpu", DEBUG=False):
-        self.model = YOLO(detect_model_path)
+    def __init__(self, detect_model_path, DEBUG=False):
         self.CONFIDENCE_THRESHOLD = 0.4
         self.IMAGE_SIZE_RATIO_THRESHOLD = 0.7
-        self.device = device
+        self.DEVICE = "0" if torch.cuda.is_available() else "cpu"
         self.DEBUG = DEBUG
+        self.model = YOLO(detect_model_path)
+
 
     def is_gpu(self) -> bool:
-        return self.device != "cpu"
+        return self.DEVICE != "cpu"
 
     def detect(self, image: Image) -> int:
         rbc = 0
 
-        r = self.model(image, device=self.device, verbose=False)[0]  # results always a list of length 1
+        r = self.model(image, device=self.DEVICE, verbose=False)[0]  # results always a list of length 1
 
         if self.DEBUG:
             im_array = r.plot(font_size=0.01, line_width=1)  # plot rbcs
             im = Image.fromarray(im_array[..., ::-1])
             if 'ipykernel' in sys.modules:
-                display(im)  # show image
+                display(im)  # show image in Jupyter Notebook
             else:
                 im.show()  # show image
 
@@ -149,7 +150,7 @@ class BloodDensityDetector(metaclass=Singleton):
             im_array = r.plot(labels=False)  # plot density
             im = Image.fromarray(im_array[..., ::-1])
             if 'ipykernel' in sys.modules:
-                display(im)  # show image
+                display(im)  # show image in Jupyter Notebook
             else:
                 im.show()
 
