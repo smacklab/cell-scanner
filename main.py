@@ -1,13 +1,12 @@
 
 from PIL import Image
 import tifffile
-import torch
 from Detectors import WhiteBloodCellDetector, RedBloodCellDetector, BloodDensityDetector, ScanResult
 import os
 from tqdm import tqdm
 
 
-def process_ndpi(ndpiFile: str) -> ScanResult:
+def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
     if not os.path.isfile(ndpiFile) or not ndpiFile.endswith(".ndpi"):
         print("Invalid NDPI file")
         return ScanResult() # empty result
@@ -34,6 +33,11 @@ def process_ndpi(ndpiFile: str) -> ScanResult:
                 summary.rbc += result.rbc
                 summaryLog.set_description_str(f'{summary}')
 
+    if save:
+        # print summary to file
+        with open(os.path.splitext(ndpiFile)[0] + ".txt", "w") as f:
+            f.write(str(summary))
+            
     return summary
 
 
@@ -44,8 +48,8 @@ def process_image(image: Image) -> ScanResult:
         # scan is not good, return empty result
         return ScanResult({}, 0)
 
-    wbcDetector = WhiteBloodCellDetector("models/wbc-detection-Feb24.pt", "models/wbc-classification-Sep23.pt")
-    rbcDetector = RedBloodCellDetector("models/rbc-detection-Sep12.pt")
+    wbcDetector = WhiteBloodCellDetector("models/wbc-detection-Feb24.pt", "models/wbc-classification-Sep23.pt", DEBUG=False)
+    rbcDetector = RedBloodCellDetector("models/rbc-detection-Sep12.pt", DEBUG=False)
     wbc = wbcDetector.detect(image)
     rbc = rbcDetector.detect(image)
 
@@ -55,6 +59,7 @@ def process_image(image: Image) -> ScanResult:
 if __name__ == '__main__':
 
     ndpi_file = "samples/[F012]2019-107_MID.ndpi"
-    summary = process_ndpi(ndpi_file)
+    summary = process_ndpi(ndpi_file, save=True)
 
     print(summary)
+    # process_image(Image.open("samples/sample1.jpg"))

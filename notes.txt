@@ -1,0 +1,2 @@
+1. NDPI reading is slow due to `tif.asarray()`. Check out this thread https://stackoverflow.com/questions/7569553/working-with-tiffs-import-export-in-python-using-numpy
+2. Need to save "Unknown" wbcs to folder

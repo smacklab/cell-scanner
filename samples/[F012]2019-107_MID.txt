@@ -1,0 +1,1 @@
+ScanResult(wbc=Counter({'L': 1252, 'N': 712, 'M': 403, 'E': 124, 'B': 24, 'Unknown': 12}), rbc=1347227)
