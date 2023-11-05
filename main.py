@@ -42,7 +42,7 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
 
 
 def process_image(image: Image) -> ScanResult:
-    bloodDensityDetector = BloodDensityDetector("models/blood-smear-density-Apr10.pt")
+    bloodDensityDetector = BloodDensityDetector("models/blood_smear_model_Oct20.pt")
 
     if not bloodDensityDetector.hasGoodDensity(image) and False:
         # scan is not good, return empty result
