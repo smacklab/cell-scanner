@@ -4,6 +4,33 @@ import tifffile
 from Detectors import WhiteBloodCellDetector, RedBloodCellDetector, BloodDensityDetector, ScanResult
 import os
 from tqdm import tqdm
+from concurrent.futures import ThreadPoolExecutor
+
+
+def process_chunk(ndpi, height, width):
+    croppedImage = ndpi.crop((height, width, height + 512, width + 512))
+    result = process_image(croppedImage)
+    return result
+
+
+def parallel_process(ndpi, ndpiHeight, ndpiWidth):
+    summary = ScanResult()
+    summaryLog = tqdm(total=0, position=2, bar_format='{desc}')
+
+    with ThreadPoolExecutor() as executor:
+        futures = []
+        for height in range(0, ndpiHeight, 512):
+            for width in range(0, ndpiWidth, 512):
+                future = executor.submit(process_chunk, ndpi, height, width)
+                futures.append(future)
+
+        for future in tqdm(futures, position=0, leave=True):
+            result = future.result()
+            summary.wbc += result.wbc
+            summary.rbc += result.rbc
+            summaryLog.set_description_str(f'{summary}')
+
+    return summary
 
 
 def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
@@ -16,22 +43,12 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
 
     with tifffile.TiffFile(ndpiFile) as tif:
         ndpiRaw = tif.asarray()
-
         print("Done reading, start processing NDPI Scan")
         ndpi = Image.fromarray(ndpiRaw)
         ndpiWidth, ndpiHeight = ndpi.size
 
         print("Processing row by row, column by column (approx. 5 minutes on GPU)")
-        summaryLog = tqdm(total=0, position=2, bar_format='{desc}')
-        for height in tqdm(range(0, ndpiHeight, 512), position=0):
-            for width in tqdm(range(0, ndpiWidth, 512), leave=False, position=1):
-                croppedImage = ndpi.crop((height, width, height + 512, width + 512))
-                result = process_image(croppedImage)  # Extract WBC and RBC data from cropped image
-
-                # combine results
-                summary.wbc += result.wbc
-                summary.rbc += result.rbc
-                summaryLog.set_description_str(f'{summary}')
+        summary = parallel_process(ndpi, ndpiHeight, ndpiWidth)
 
     if save:
         # print summary to ~/results/filename.txt
