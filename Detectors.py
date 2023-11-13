@@ -30,6 +30,7 @@ class WhiteBloodCellDetector(metaclass=Singleton):
         self.IMAGE_SIZE_RATIO_THRESHOLD = 0.5
         self.DEBUG = DEBUG
         self.DEVICE = "0" if torch.cuda.is_available() else "cpu"
+        self.cmodel = YOLO('yolov8n.pt')
         self.cmodel = YOLO(classify_model_path)
 
     def is_gpu(self) -> bool:
