@@ -17,7 +17,7 @@ def parallel_process(ndpi, ndpiHeight, ndpiWidth):
     summary = ScanResult()
     summaryLog = tqdm(total=0, position=2, bar_format='{desc}')
 
-    with ThreadPoolExecutor() as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         futures = []
         for height in range(0, ndpiHeight, 512):
             for width in range(0, ndpiWidth, 512):
