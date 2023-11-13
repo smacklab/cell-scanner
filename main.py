@@ -1,4 +1,4 @@
-
+import sys
 from PIL import Image
 import tifffile
 from Detectors import WhiteBloodCellDetector, RedBloodCellDetector, BloodDensityDetector, ScanResult
@@ -34,8 +34,8 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
                 summaryLog.set_description_str(f'{summary}')
 
     if save:
-        # print summary to file
-        with open(os.path.splitext(ndpiFile)[0] + ".txt", "w") as f:
+        # print summary to ~/results/filename.txt
+        with open(os.path.expanduser("~/results/" + os.path.basename(ndpiFile) + ".txt"), "w") as f:
             f.write(str(summary))
 
     return summary
@@ -57,19 +57,15 @@ def process_image(image: Image) -> ScanResult:
 
 
 if __name__ == '__main__':
-    summary = ScanResult()
+    if len(sys.argv) != 3:
+        print("Usage: python main.py ndpi <pathToNdpiFile>")
+        sys.exit(1)
 
-    # open file samples/Set5/active.txt
-    # the file contains image names of the active samples
-    # each line is a image name
-    # for each filename, run the process_image function
-    summaryLog = tqdm(total=0, position=0, bar_format='{desc}')
-    for filename in tqdm(open("samples/set5active.txt").readlines()):
-        filename = filename.strip()
-        image = Image.open("samples/Set5/" + filename)
-        result = process_image(image)
-        summary.wbc += result.wbc
-        summary.rbc += result.rbc
-        summaryLog.set_description_str(f'{summary}')
+    if sys.argv[1] != "ndpi":
+        print("Usage: python main.py ndpi <pathToNdpiFile>")
+        sys.exit(1)
+
+    ndpiFile = sys.argv[2]
+    summary = process_ndpi(ndpiFile, save=True)
 
     print(summary)
