@@ -44,16 +44,16 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
 def process_image(image: Image) -> ScanResult:
     bloodDensityDetector = BloodDensityDetector("models/blood-smear-density-Apr10.pt")
 
-    # if not bloodDensityDetector.hasGoodDensity(image):
-    # scan is not good, return empty result
-    # return ScanResult({}, 0)
+    if not bloodDensityDetector.hasGoodDensity(image):
+        # scan is not good, return empty result
+        return ScanResult({}, 0)
 
     wbcDetector = WhiteBloodCellDetector("models/wbc-classification-Sep23.pt", DEBUG=False)
     rbcDetector = RedBloodCellDetector("models/rbc-detection-Sep12.pt", DEBUG=False)
     wbc = wbcDetector.detect(image)
-    # rbc = rbcDetector.detect(image)
+    rbc = rbcDetector.detect(image)
 
-    return ScanResult(wbc, 0)
+    return ScanResult(wbc, rbc)
 
 
 if __name__ == '__main__':
