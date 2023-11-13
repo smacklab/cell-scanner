@@ -9,7 +9,7 @@ from tqdm import tqdm
 def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
     if not os.path.isfile(ndpiFile) or not ndpiFile.endswith(".ndpi"):
         print("Invalid NDPI file")
-        return ScanResult() # empty result
+        return ScanResult()  # empty result
 
     summary = ScanResult()
     print("Reading NDPI Scan (approx. 15 seconds)")
@@ -26,7 +26,7 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
         for height in tqdm(range(0, ndpiHeight, 512), position=0):
             for width in tqdm(range(0, ndpiWidth, 512), leave=False, position=1):
                 croppedImage = ndpi.crop((height, width, height + 512, width + 512))
-                result = process_image(croppedImage) # Extract WBC and RBC data from cropped image
+                result = process_image(croppedImage)  # Extract WBC and RBC data from cropped image
 
                 # combine results
                 summary.wbc += result.wbc
@@ -44,16 +44,16 @@ def process_ndpi(ndpiFile: str, save: bool) -> ScanResult:
 def process_image(image: Image) -> ScanResult:
     bloodDensityDetector = BloodDensityDetector("models/blood-smear-density-Apr10.pt")
 
-    if not bloodDensityDetector.hasGoodDensity(image) and False:
-        # scan is not good, return empty result
-        return ScanResult({}, 0)
+    # if not bloodDensityDetector.hasGoodDensity(image):
+    # scan is not good, return empty result
+    # return ScanResult({}, 0)
 
-    wbcDetector = WhiteBloodCellDetector("models/wbc-detection-Feb24.pt", "models/wbc-classification-Sep23.pt", DEBUG=False)
+    wbcDetector = WhiteBloodCellDetector("models/wbc-classification-Sep23.pt", DEBUG=False)
     rbcDetector = RedBloodCellDetector("models/rbc-detection-Sep12.pt", DEBUG=False)
     wbc = wbcDetector.detect(image)
-    rbc = rbcDetector.detect(image)
+    # rbc = rbcDetector.detect(image)
 
-    return ScanResult(wbc, rbc)
+    return ScanResult(wbc, 0)
 
 
 if __name__ == '__main__':
@@ -64,7 +64,7 @@ if __name__ == '__main__':
     # each line is a image name
     # for each filename, run the process_image function
     summaryLog = tqdm(total=0, position=0, bar_format='{desc}')
-    for filename in tqdm(open("samples/Set5/active.txt").readlines()):
+    for filename in tqdm(open("samples/set5active.txt").readlines()):
         filename = filename.strip()
         image = Image.open("samples/Set5/" + filename)
         result = process_image(image)
@@ -72,6 +72,4 @@ if __name__ == '__main__':
         summary.rbc += result.rbc
         summaryLog.set_description_str(f'{summary}')
 
-
     print(summary)
-
