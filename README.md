@@ -3,7 +3,7 @@
 Generate reports on NDPI blood scans
 
 Install: 
-Set up environment with PyTorch GPU
+Set up environment with PyTorch GPU, then
 `pip install --upgrade ultralytics imagecodecs tifffile tqdm`
 
 Usage:
