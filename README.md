@@ -2,4 +2,9 @@
 
 Generate reports on NDPI blood scans
 
-`pip install ultralytics==8.0.184`
+Install: 
+Set up environment with PyTorch GPU
+`pip install --upgrade ultralytics imagecodecs tifffile tqdm`
+
+Usage:
+`python main.py ndpi <path-to-ndpi-file`
